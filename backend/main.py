@@ -5,9 +5,9 @@ from sqlalchemy import select
 from database import SessionLocal
 from models import Application
 from fastapi import HTTPException
-from pydantic import model_validator
 from datetime import date
 from fastapi.middleware.cors import CORSMiddleware
+from pydantic import BaseModel, model_validator
 
 
 app = FastAPI()
@@ -52,12 +52,21 @@ class ApplicationUpdate(BaseModel):
     salary_range: str | None = None
     notes: str | None = None
     
-    @model_validator(mode="after")
-    def reject_null_fields(self):
-        for field in self.model_fields_set:
-            if getattr(self, field) is None:
-                raise ValueError(f"{field} cannot be null")
-        return self
+    @model_validator(mode="before")
+    @classmethod
+    def reject_null_required_fields(cls, data):
+        if isinstance(data, dict):
+            required_fields = {
+                "company_name",
+                "job_title",
+                "status",
+            }
+
+            for field in required_fields:
+                if field in data and data[field] is None:
+                    raise ValueError(f"{field} cannot be null")
+
+        return data
     
     
 @app.get("/applications")

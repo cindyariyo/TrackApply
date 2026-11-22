@@ -2,6 +2,8 @@ import { useEffect, useState } from "react";
 import ApplicationForm from "./components/ApplicationForm";
 import ApplicationFilters from "./components/ApplicationFilters";
 import ApplicationTable from "./components/ApplicationTable";
+import ApplicationEditor from "./components/ApplicationEditor";
+import ApplicationStats from "./components/ApplicationStats";
 import {
   type Application,
   type ApplicationInput,
@@ -15,6 +17,8 @@ function App() {
   const [search, setSearch] = useState("");
   const [statusFilter, setStatusFilter] = useState("All");
   const [error, setError] = useState("");
+  const [editingApplication, setEditingApplication] =
+    useState<Application | null>(null);
 
   async function fetchApplications() {
     try {
@@ -85,6 +89,34 @@ function App() {
     }
   }
 
+  async function saveApplication(
+    id: number,
+    changes: ApplicationInput
+  ) {
+    const response = await fetch(`${API_URL}/applications/${id}`, {
+      method: "PATCH",
+      headers: {
+        "Content-Type": "application/json",
+      },
+      body: JSON.stringify(changes),
+    });
+
+    if (!response.ok) {
+      const errorData = await response.json();
+
+      console.error(
+        "PATCH validation error:",
+        JSON.stringify(errorData, null, 2)
+      );
+      console.error("Data sent:", changes);
+
+      throw new Error(`PATCH failed: ${response.status}`);
+    }
+
+    await fetchApplications();
+    setEditingApplication(null);
+  }
+
   const filteredApplications = applications.filter((application) => {
     const matchesSearch =
       application.company_name
@@ -109,6 +141,8 @@ function App() {
 
       {error && <p className="error">{error}</p>}
 
+      <ApplicationStats applications={applications} />
+      
       <ApplicationForm onAdd={addApplication} />
 
       <section className="panel">
@@ -125,7 +159,16 @@ function App() {
           applications={filteredApplications}
           onStatusChange={updateStatus}
           onDelete={deleteApplication}
+          onEdit={setEditingApplication}
         />
+        {editingApplication && (
+          <ApplicationEditor
+            key={editingApplication.id}
+            application={editingApplication}
+            onSave={saveApplication}
+            onCancel={() => setEditingApplication(null)}
+          />
+        )}
       </section>
     </main>
   );

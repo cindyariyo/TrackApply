@@ -7,12 +7,14 @@ type Props = {
   applications: Application[];
   onStatusChange: (id: number, status: string) => void;
   onDelete: (id: number) => void;
+  onEdit: (application: Application) => void;
 };
 
 export default function ApplicationTable({
   applications,
   onStatusChange,
   onDelete,
+  onEdit,
 }: Props) {
   if (applications.length === 0) {
     return <p>No matching applications.</p>;
@@ -62,6 +64,10 @@ export default function ApplicationTable({
                   onClick={() => onDelete(application.id)}
                 >
                   Delete
+                </button>
+                <button 
+                    onClick={() => onEdit(application)}>
+                    Edit
                 </button>
               </td>
             </tr>
