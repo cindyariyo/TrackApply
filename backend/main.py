@@ -77,7 +77,7 @@ def get_applications():
 
         return results
 
-@app.post("/applications")
+@app.post("/applications", status_code=201)
 def create_application(application: ApplicationCreate):
     with SessionLocal() as session:
         new_application = Application(**application.model_dump()) #converts to python dict and unpacks values
@@ -126,7 +126,7 @@ def update_applications(
         return application
     
 
-@app.delete("/applications/{application_id}")
+@app.delete("/applications/{application_id}", status_code=204)
 def delete_application(application_id: int):
     with SessionLocal() as session:
         application = session.get(Application, application_id)
